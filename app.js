@@ -64,8 +64,8 @@ function renderHistory(){
 function renderChart(){
  const counts={pending:0,overdue:0,paid:0};payments.forEach(p=>counts[statusOf(p)]++);
  const canvas=$("status-chart");if(!canvas||!window.Chart)return;if(statusChart)statusChart.destroy();
- statusChart=new Chart(canvas,{type:"doughnut",data:{labels:["Pendientes","Vencidos","Pagados"],datasets:[{data:[counts.pending,counts.overdue,counts.paid],backgroundColor:["#3157d5","#c43d4b","#2da56b"],borderWidth:0,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:"72%",plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}`}}}});
- $("chart-legend").innerHTML=[["Pendientes",counts.pending,"#3157d5"],["Vencidos",counts.overdue,"#c43d4b"],["Pagados",counts.paid,"#2da56b"]].map(([l,n,c])=>`<span><i class="legend-dot" style="background:${c}"></i>${l} (${n})</span>`).join("");
+  statusChart = new Chart(canvas, { type: "doughnut", data: { labels: ["Pendientes", "Vencidos", "Pagados"], datasets: [{ data: [counts.pending, counts.overdue, counts.paid], backgroundColor: ["#3157d5", "#c43d4b", "#2da56b"], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: "72%", plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.label}: ${ctx.raw}` } } } } });
+$("chart-legend").innerHTML=[["Pendientes",counts.pending,"#3157d5"],["Vencidos",counts.overdue,"#c43d4b"],["Pagados",counts.paid,"#2da56b"]].map(([l,n,c])=>`<span><i class="legend-dot" style="background:${c}"></i>${l} (${n})</span>`).join("");
 }
 function renderCalendar(){
  const year=calendarCursor.getFullYear(),month=calendarCursor.getMonth(),first=new Date(year,month,1),offset=(first.getDay()+6)%7,days=new Date(year,month+1,0).getDate(),weekdays=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
