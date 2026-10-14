@@ -19,6 +19,30 @@
       <label>Contraseña<input id="login-password" type="password" autocomplete="current-password" required placeholder="Tu contraseña de Supabase"></label>
       <button class="primary-button" type="submit" id="login-button">Iniciar sesión</button>
       <p id="auth-message" class="auth-message" role="status"></p>
+<button type="button" id="forgot-password" class="text-button">
+  ¿Olvidaste tu contraseña?
+</button>
+
+<form id="reset-password-form" class="hidden">
+  <h2>Crear nueva contraseña</h2>
+  <label>
+    Nueva contraseña
+    <input id="new-password" type="password" minlength="8"
+      autocomplete="new-password" required>
+  </label>
+  <label>
+    Confirmar contraseña
+    <input id="confirm-password" type="password" minlength="8"
+      autocomplete="new-password" required>
+  </label>
+  <button type="submit" class="primary-button">
+    Guardar nueva contraseña
+  </button>
+  <button type="button" id="back-to-login" class="text-button">
+    Volver al inicio de sesión
+  </button>
+  <p id="reset-message" class="auth-message" role="status"></p>
+</form>
     </form>
   </section>
 
