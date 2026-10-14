@@ -122,4 +122,77 @@ $("payment-search").addEventListener("input",renderTable);$("status-filter").add
 $("prev-month").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});$("next-month").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
 $("calendar-grid").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(b){selectedDay=b.dataset.day;renderCalendar();}});
 $("export-history").addEventListener("click",()=>{const rows=[["Pago","Fecha de pago","Importe pagado MXN","Notas"],...history.map(h=>[payments.find(p=>p.id===h.payment_id)?.name||"Pago",h.paid_at,h.amount_paid,h.note||""])];const csv=rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="historial-pagos.csv";a.click();URL.revokeObjectURL(url);});
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user){showApp(session.user);await refresh();}})();
+(async()=>
+  
+let recoveryMode = false;
+
+$("forgot-password").addEventListener("click", async () => {
+  const email = $("login-email").value.trim();
+
+  if (!email) {
+    authMessage("Escribe tu correo electrónico primero.");
+    $("login-email").focus();
+    return;
+  }
+
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: "https://allanvaltierra77-svg.github.io/agenda-de-pagos/"
+    });
+
+    if (error) throw error;
+
+    authMessage("Te enviamos un enlace para cambiar tu contraseña.", false);
+  } catch (error) {
+    authMessage("No se pudo enviar el correo: " + error.message);
+  }
+});
+
+$("back-to-login").addEventListener("click", () => {
+  $("reset-password-form").classList.add("hidden");
+  $("login-form").classList.remove("hidden");
+  recoveryMode = false;
+});
+
+$("reset-password-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const password = $("new-password").value;
+  const confirmation = $("confirm-password").value;
+  const message = $("reset-message");
+
+  if (password.length < 8) {
+    message.textContent = "La contraseña debe tener al menos 8 caracteres.";
+    return;
+  }
+
+  if (password !== confirmation) {
+    message.textContent = "Las contraseñas no coinciden.";
+    return;
+  }
+
+  try {
+    const { error } = await sb.auth.updateUser({ password });
+
+    if (error) throw error;
+
+    message.textContent = "Contraseña actualizada. Ya puedes iniciar sesión.";
+    recoveryMode = false;
+    await sb.auth.signOut();
+    $("reset-password-form").classList.add("hidden");
+    $("login-form").classList.remove("hidden");
+    $("login-password").value = "";
+  } catch (error) {
+    message.textContent = "No se pudo cambiar la contraseña: " + error.message;
+  }
+});
+
+sb.auth.onAuthStateChange((event) => {
+  if (event === "PASSWORD_RECOVERY") {
+    recoveryMode = true;
+    $("login-form").classList.add("hidden");
+    $("reset-password-form").classList.remove("hidden");
+  }
+});
+
+  {const {data:{session}}=await sb.auth.getSession();if(session?.user){showApp(session.user);await refresh();}})();
