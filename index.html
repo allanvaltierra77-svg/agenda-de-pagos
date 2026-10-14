@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172554">
+  <title>Mi Agenda de Pagos</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <section id="auth-screen" class="auth-screen">
+    <form id="login-form" class="auth-card">
+      <div class="brand-mark auth-mark">₱</div>
+      <h1>Mi Agenda de Pagos</h1>
+      <p>Inicia sesión para consultar tu agenda familiar.</p>
+      <label>Correo electrónico<input id="login-email" type="email" autocomplete="username" required placeholder="tu@correo.com"></label>
+      <label>Contraseña<input id="login-password" type="password" autocomplete="current-password" required placeholder="Tu contraseña de Supabase"></label>
+      <button class="primary-button" type="submit" id="login-button">Iniciar sesión</button>
+      <p id="auth-message" class="auth-message" role="status"></p>
+    </form>
+  </section>
+
+  <div class="app-shell hidden" id="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark">₱</div><div><strong>Mi Agenda</strong><span>de pagos</span></div></div>
+      <nav aria-label="Navegación principal">
+        <button class="nav-item active" data-view="dashboard">▦ <span>Resumen</span></button>
+        <button class="nav-item" data-view="payments">▤ <span>Todos los pagos</span></button>
+        <button class="nav-item" data-view="history">↻ <span>Historial</span></button>
+        <button class="nav-item" data-view="settings">⚙ <span>Configuración</span></button>
+      </nav>
+      <div class="sidebar-note"><span class="status-dot"></span><div><strong>Agenda familiar</strong><small>Sesión privada</small></div></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div><p class="eyebrow" id="today-label">AGENDA PERSONAL</p><h1 id="page-title">Resumen de pagos</h1></div>
+        <div class="top-actions"><span class="user-email" id="user-email"></span><button class="secondary-button" id="logout-button">Cerrar sesión</button><button class="primary-button" id="add-payment-top">＋ Nuevo pago</button></div>
+      </header>
+
+      <section id="dashboard-view" class="view">
+        <div class="welcome-row"><div><h2>Hola, bienvenido 👋</h2><p>Esto es lo que necesitas tener en cuenta.</p></div><div class="month-chip" id="month-chip">Este mes</div></div>
+        <div class="stats-grid">
+          <article class="stat-card"><div class="stat-icon blue">▤</div><p>Por pagar</p><strong id="total-pending">$0.00</strong><small id="pending-count">0 pagos pendientes</small></article>
+          <article class="stat-card"><div class="stat-icon red">!</div><p>Vencidos</p><strong id="overdue-count">0</strong><small>Revisar cuanto antes</small></article>
+          <article class="stat-card"><div class="stat-icon green">✓</div><p>Pagados este mes</p><strong id="total-paid">$0.00</strong><small id="paid-count">0 pagos realizados</small></article>
+          <article class="stat-card"><div class="stat-icon gold">◷</div><p>Próximo vencimiento</p><strong id="next-due">—</strong><small id="next-due-name">Sin pagos próximos</small></article>
+        </div>
+        <div class="content-grid">
+          <article class="panel"><div class="panel-heading"><div><h3>Próximos pagos</h3><p>Lo que viene en los siguientes 7 días</p></div><button class="text-button" data-go="payments">Ver todos →</button></div><div id="upcoming-list" class="payment-list"></div></article>
+          <article class="panel"><div class="panel-heading"><div><h3>Estado de pagos</h3><p>Resumen de tus obligaciones</p></div></div><div class="chart-wrap"><canvas id="status-chart" aria-label="Gráfica de estado de pagos"></canvas></div><div id="chart-legend" class="chart-legend"></div></article>
+        </div>
+        <article class="panel calendar-panel"><div class="panel-heading"><div><h3>Calendario de vencimientos</h3><p>Selecciona un día para revisar sus pagos</p></div><div class="calendar-controls"><button class="icon-button" id="prev-month" aria-label="Mes anterior">‹</button><strong id="calendar-month"></strong><button class="icon-button" id="next-month" aria-label="Mes siguiente">›</button></div></div><div class="calendar-grid" id="calendar-grid"></div><div id="selected-day-payments" class="selected-day-payments"></div></article>
+      </section>
+
+      <section id="payments-view" class="view hidden"><article class="panel"><div class="panel-heading"><div><h3>Todos los pagos</h3><p>Consulta, agrega o actualiza obligaciones.</p></div><button class="primary-button" id="add-payment-list">＋ Nuevo pago</button></div><div class="filters"><input id="payment-search" type="search" placeholder="Buscar pago, banco o servicio…" aria-label="Buscar pagos"><select id="status-filter" aria-label="Filtrar por estado"><option value="all">Todos los estados</option><option value="pending">Pendientes</option><option value="overdue">Vencidos</option><option value="paid">Pagados</option></select></div><div class="table-wrap"><table><thead><tr><th>Pago</th><th>Vence</th><th>Frecuencia</th><th>Importe</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="payments-table"></tbody></table></div></article></section>
+
+      <section id="history-view" class="view hidden"><article class="panel"><div class="panel-heading"><div><h3>Historial de pagos</h3><p>Pagos que ya fueron marcados como realizados.</p></div><button class="secondary-button" id="export-history">Exportar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Pago</th><th>Fecha de pago</th><th>Importe pagado</th><th>Nota</th></tr></thead><tbody id="history-table"></tbody></table></div></article></section>
+
+      <section id="settings-view" class="view hidden"><article class="panel settings-panel"><h3>Configuración</h3><p>Tu agenda está conectada a Supabase. Los cambios se guardan en la base de datos.</p><div class="notice"><strong>WhatsApp todavía no está conectado.</strong><span>Lo configuraremos después. No escribas contraseñas bancarias ni datos completos de tarjetas aquí.</span></div><div class="settings-row"><div><strong>Modo actual</strong><p>Base de datos en la nube</p></div><span class="pill pill-paid">Conectado</span></div><p id="settings-household" class="settings-household"></p></article></section>
+    </main>
+  </div>
+
+  <dialog id="payment-dialog"><form id="payment-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">AGENDA PERSONAL</p><h2 id="dialog-title">Agregar pago</h2></div><button type="button" class="icon-button" id="close-dialog" aria-label="Cerrar">×</button></div><input type="hidden" id="payment-id"><label>Nombre del pago<input id="payment-name" required maxlength="80" placeholder="Ej. Tarjeta Banorte"></label><div class="form-row"><label>Importe estimado (MXN)<input id="payment-amount" required type="number" min="0" step="0.01" placeholder="1500.00"></label><label>Fecha límite<input id="payment-due" required type="date"></label></div><div class="form-row"><label>Tipo<select id="payment-category"><option>Tarjeta</option><option>Servicio</option><option>Préstamo</option><option>Cuenta</option><option>Personal</option><option>Otro</option></select></label><label>Frecuencia<select id="payment-frequency"><option value="once">Una sola vez</option><option value="biweekly">Quincenal</option><option value="monthly">Mensual</option><option value="custom">Personalizada</option></select></label></div><label>Institución o proveedor (opcional)<input id="payment-provider" maxlength="80" placeholder="Ej. BBVA, CFE, préstamo familiar"></label><label>Notas (opcional)<textarea id="payment-notes" rows="2" maxlength="500" placeholder="Referencia parcial o instrucciones, sin datos bancarios sensibles"></textarea></label><div class="dialog-actions"><button type="button" class="secondary-button" id="cancel-dialog">Cancelar</button><button type="submit" class="primary-button">Guardar pago</button></div></form></dialog>
+  <dialog id="paid-dialog"><form id="paid-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow">REGISTRAR PAGO</p><h2>Confirmar pago realizado</h2></div><button type="button" class="icon-button" id="close-paid-dialog" aria-label="Cerrar">×</button></div><input type="hidden" id="paid-payment-id"><label>Importe pagado (MXN)<input id="paid-amount" required type="number" min="0" step="0.01"></label><label>Fecha de pago<input id="paid-date" required type="date"></label><label>Nota (opcional)<textarea id="paid-note" rows="2" maxlength="500"></textarea></label><div class="dialog-actions"><button type="button" class="secondary-button" id="cancel-paid-dialog">Cancelar</button><button type="submit" class="primary-button">Confirmar</button></div></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
