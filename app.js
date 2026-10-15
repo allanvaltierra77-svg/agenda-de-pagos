@@ -122,8 +122,7 @@ $("payment-search").addEventListener("input",renderTable);$("status-filter").add
 $("prev-month").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderCalendar();});$("next-month").addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderCalendar();});
 $("calendar-grid").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(b){selectedDay=b.dataset.day;renderCalendar();}});
 $("export-history").addEventListener("click",()=>{const rows=[["Pago","Fecha de pago","Importe pagado MXN","Notas"],...history.map(h=>[payments.find(p=>p.id===h.payment_id)?.name||"Pago",h.paid_at,h.amount_paid,h.note||""])];const csv=rows.map(r=>r.map(v=>`"${String(v??"").replace(/"/g,'""')}"`).join(",")).join("\r\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="historial-pagos.csv";a.click();URL.revokeObjectURL(url);});
-(async()=>
-  
+
 let recoveryMode = false;
 
 $("forgot-password").addEventListener("click", async () => {
@@ -194,5 +193,4 @@ sb.auth.onAuthStateChange((event) => {
     $("reset-password-form").classList.remove("hidden");
   }
 });
-
-  {const {data:{session}}=await sb.auth.getSession();if(session?.user){showApp(session.user);await refresh();}})();
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user){showApp(session.user);await refresh();}})();
