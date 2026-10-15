@@ -141,7 +141,7 @@ $("forgot-password").addEventListener("click", async () => {
 
     if (error) throw error;
 
-    authMessage("Te enviamos un enlace para cambiar tu contraseña.", false);
+    authMessage("Te enviamos un enlace. Revisa tu correo y abre el enlace para continuar.", false);
   } catch (error) {
     authMessage("No se pudo enviar el correo: " + error.message);
   }
@@ -150,6 +150,8 @@ $("forgot-password").addEventListener("click", async () => {
 $("back-to-login").addEventListener("click", () => {
   $("reset-password-form").classList.add("hidden");
   $("login-form").classList.remove("hidden");
+  $("reset-password-form").reset();
+  $("reset-message").textContent = "";
   recoveryMode = false;
 });
 
@@ -159,6 +161,7 @@ $("reset-password-form").addEventListener("submit", async (event) => {
   const password = $("new-password").value;
   const confirmation = $("confirm-password").value;
   const message = $("reset-message");
+  const button = $("reset-password-form").querySelector('button[type="submit"]');
 
   if (password.length < 8) {
     message.textContent = "La contraseña debe tener al menos 8 caracteres.";
@@ -170,27 +173,41 @@ $("reset-password-form").addEventListener("submit", async (event) => {
     return;
   }
 
+  button.disabled = true;
+  button.textContent = "Guardando...";
+
   try {
-    const { error } = await sb.auth.updateUser({ password });
+    const { data, error } = await sb.auth.updateUser({ password });
 
     if (error) throw error;
 
-    message.textContent = "Contraseña actualizada. Ya puedes iniciar sesión.";
+    message.textContent = "¡Contraseña actualizada! Ya puedes iniciar sesión.";
     recoveryMode = false;
+
     await sb.auth.signOut();
+
     $("reset-password-form").classList.add("hidden");
     $("login-form").classList.remove("hidden");
     $("login-password").value = "";
+    $("reset-password-form").reset();
+    authMessage("Contraseña actualizada. Inicia sesión con tu nueva contraseña.", false);
   } catch (error) {
+    console.error("Error al actualizar contraseña:", error);
     message.textContent = "No se pudo cambiar la contraseña: " + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Guardar nueva contraseña";
   }
 });
 
 sb.auth.onAuthStateChange((event) => {
   if (event === "PASSWORD_RECOVERY") {
     recoveryMode = true;
+    $("auth-screen").classList.remove("hidden");
+    $("app-shell").classList.add("hidden");
     $("login-form").classList.add("hidden");
     $("reset-password-form").classList.remove("hidden");
+    $("reset-message").textContent = "";
   }
 });
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session?.user){showApp(session.user);await refresh();}})();
